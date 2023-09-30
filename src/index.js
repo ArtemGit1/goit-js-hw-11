@@ -1,15 +1,23 @@
+import axios from 'axios';
+import { Buffer } from 'buffer';
+
 const form = document.getElementById('search-form');
 const gallery = document.querySelector('.gallery');
 const loadMoreButton = document.querySelector('.load-more');
+const notification = document.querySelector('.notification');
 let page = 1;
 let searchQuery = '';
+let totalHits = 0;
+let totalPages = 0;
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     gallery.innerHTML = '';
     page = 1;
-    searchQuery = e.target.searchQuery.value;
-    await fetchImages();
+    searchQuery = e.target.searchQuery.value.trim();
+    if (searchQuery !== '') {
+        await fetchImages();
+    }
 });
 
 loadMoreButton.addEventListener('click', async () => {
@@ -18,24 +26,20 @@ loadMoreButton.addEventListener('click', async () => {
 });
 
 async function fetchImages() {
-    const apiKey = '39751555-c2fbc931ac716611d03f33f4d'; 
+    const apiKey = '39751555-c2fbc931ac716611d03f33f4d';
     const perPage = 40;
     const apiUrl = `https://pixabay.com/api/?key=${apiKey}&q=${searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${perPage}`;
 
     try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
+        const response = await axios.get(apiUrl); // Використовуємо Axios для виконання GET-запиту
+        const data = response.data;
 
-        if (data.hits.length === 0) {
-            if (page === 1) {
-
-                alert('Sorry, there are no images matching your search query. Please try again.');
-            } else {
-
-                loadMoreButton.style.display = 'none';
-                alert("We're sorry, but you've reached the end of search results.");
-            }
+        if (data.totalHits === 0) {
+            notification.textContent = 'Sorry, there are no images matching your search query. Please try again.';
+            loadMoreButton.style.display = 'none';
         } else {
+            totalHits = data.totalHits;
+            totalPages = Math.ceil(totalHits / perPage);
 
             data.hits.forEach((image) => {
                 const card = document.createElement('div');
@@ -52,8 +56,11 @@ async function fetchImages() {
                 gallery.appendChild(card);
             });
 
-
-            loadMoreButton.style.display = 'block';
+            if (page < totalPages) {
+                loadMoreButton.style.display = 'block';
+            } else {
+                loadMoreButton.style.display = 'none';
+            }
         }
     } catch (error) {
         console.error('Error fetching images:', error);

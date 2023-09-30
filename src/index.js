@@ -1,9 +1,11 @@
 import axios from 'axios';
 import { Buffer } from 'buffer';
 
+const loadMoreButton = document.querySelector('.load-more');
+loadMoreButton.style.display = 'none'; 
+
 const form = document.getElementById('search-form');
 const gallery = document.querySelector('.gallery');
-const loadMoreButton = document.querySelector('.load-more');
 const notification = document.querySelector('.notification');
 let page = 1;
 let searchQuery = '';
@@ -15,8 +17,11 @@ form.addEventListener('submit', async (e) => {
     gallery.innerHTML = '';
     page = 1;
     searchQuery = e.target.searchQuery.value.trim();
-    if (searchQuery !== '') {
+    if (isValidSearchQuery(searchQuery)) {
         await fetchImages();
+    } else {
+        alert('Будь ласка, введіть коректний запит для пошуку зображень.'); // Виводимо повідомлення через alert
+        loadMoreButton.style.display = 'none';
     }
 });
 
@@ -31,11 +36,11 @@ async function fetchImages() {
     const apiUrl = `https://pixabay.com/api/?key=${apiKey}&q=${searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${perPage}`;
 
     try {
-        const response = await axios.get(apiUrl); // Використовуємо Axios для виконання GET-запиту
+        const response = await axios.get(apiUrl);
         const data = response.data;
 
         if (data.totalHits === 0) {
-            notification.textContent = 'Sorry, there are no images matching your search query. Please try again.';
+            notification.textContent = 'На жаль, за вашим запитом не знайдено зображень. Будь ласка, спробуйте ще раз.';
             loadMoreButton.style.display = 'none';
         } else {
             totalHits = data.totalHits;
@@ -47,10 +52,10 @@ async function fetchImages() {
                 card.innerHTML = `
                     <img src="${image.webformatURL}" alt="${image.tags}" loading="lazy" />
                     <div class="info">
-                        <p class="info-item"><b>Likes:</b> ${image.likes}</p>
-                        <p class="info-item"><b>Views:</b> ${image.views}</p>
-                        <p class="info-item"><b>Comments:</b> ${image.comments}</p>
-                        <p class="info-item"><b>Downloads:</b> ${image.downloads}</p>
+                        <p class="info-item"><b>Лайки:</b> ${image.likes}</p>
+                        <p class="info-item"><b>Перегляди:</b> ${image.views}</p>
+                        <p class="info-item"><b>Коментарі:</b> ${image.comments}</p>
+                        <p class="info-item"><b>Завантаження:</b> ${image.downloads}</p>
                     </div>
                 `;
                 gallery.appendChild(card);
@@ -63,6 +68,10 @@ async function fetchImages() {
             }
         }
     } catch (error) {
-        console.error('Error fetching images:', error);
+        console.error('Помилка при отриманні зображень:', error);
     }
+}
+
+function isValidSearchQuery(query) {
+    return query.length > 0; // Перевіряємо, що запит не порожній
 }

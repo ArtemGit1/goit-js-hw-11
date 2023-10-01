@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Buffer } from 'buffer';
+import Notiflix from 'notiflix'; // Додайте цей імпорт
 
 const loadMoreButton = document.querySelector('.load-more');
 loadMoreButton.style.display = 'none'; 
@@ -20,7 +21,8 @@ form.addEventListener('submit', async (e) => {
     if (isValidSearchQuery(searchQuery)) {
         await fetchImages();
     } else {
-        alert('Будь ласка, введіть коректний запит для пошуку зображень.'); // Виводимо повідомлення через alert
+        // Замінено alert на використання Notiflix
+        Notiflix.Notify.failure('Будь ласка, введіть коректний запит для пошуку зображень.');
         loadMoreButton.style.display = 'none';
     }
 });
@@ -40,7 +42,8 @@ async function fetchImages() {
         const data = response.data;
 
         if (data.totalHits === 0) {
-            notification.textContent = 'На жаль, за вашим запитом не знайдено зображень. Будь ласка, спробуйте ще раз.';
+            // Замінено alert на використання Notiflix
+            Notiflix.Notify.failure('На жаль, за вашим запитом не знайдено зображень. Будь ласка, спробуйте ще раз.');
             loadMoreButton.style.display = 'none';
         } else {
             totalHits = data.totalHits;
@@ -73,5 +76,5 @@ async function fetchImages() {
 }
 
 function isValidSearchQuery(query) {
-    return query.length > 0; // Перевіряємо, що запит не порожній
+    return query.length > 0;
 }
